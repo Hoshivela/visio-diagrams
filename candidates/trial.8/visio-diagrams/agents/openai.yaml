@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visio 技术制图"
+  short_description: "把自然语言业务需求绘制成可编辑的 Visio 图，并核对布局与连线"
+  default_prompt: "使用 $visio-diagrams 根据我的需求和样式要求绘制可编辑的 Visio 图。"

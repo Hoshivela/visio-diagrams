@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visio-core"
+version = "1.5.0rc6"
+description = "Native Visio diagram generation from structured descriptions"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+]
+dependencies = []
+
+[project.scripts]
+visio-core = "visio_core.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["scripts"]
+include = ["visio_core"]
+
+[tool.setuptools.package-data]
+visio_core = ["resources/*.xml", "compat_com.ps1"]
+
+[tool.setuptools.data-files]
+"share/visio-core" = ["scripts/validate-vsdx.ps1"]
