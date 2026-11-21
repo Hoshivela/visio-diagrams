@@ -2,9 +2,9 @@
 
 ## Windows x64 一键安装候选版 · trial.8
 
-[下载安装包（12.8 MB）](https://github.com/Hoshivela/visio-diagrams/raw/refs/heads/main/downloads/visio-diagrams-v1.5.0rc6-agent-trial.8.zip) · [SHA-256 校验文件](downloads/visio-diagrams-v1.5.0rc6-agent-trial.8.zip.sha256) · [候选版源码及使用说明](candidates/trial.8/visio-diagrams/README.md)
+[下载仓库源码 ZIP](https://github.com/Hoshivela/visio-diagrams/archive/refs/heads/main.zip) · [候选版源码及使用说明](candidates/trial.8/visio-diagrams/README.md)
 
-适用于 x64 Windows 10/11。将整个安装包解压到普通用户目录，双击最外层的 **Install.cmd**。需要自然语言制图时，选择登记 Codex，再重新打开 Codex，从新会话描述要绘制的流程。
+适用于 x64 Windows 10/11。下载并完整解压仓库源码 ZIP，打开解压目录里的 `candidates/trial.8/`，双击 **Install.cmd**。已克隆仓库的用户可直接从同一目录运行安装。需要自然语言制图时，选择登记 Codex，再重新打开 Codex，从新会话描述要绘制的流程。
 
 这个无示例候选包包含制图内核 1.5.0rc6 和私有 Python 3.14.10。普通图需要可用的字体和基本流程图模具；原生打开、编辑和保存检查还需要桌面 Visio。安装结束时请查看窗口中的能力自检结果。要移除本工具，运行同一解压目录的 **Uninstall.cmd**。
 

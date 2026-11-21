@@ -5,3 +5,7 @@ dist/
 .verification/
 scripts/tmp*/
 scripts/vsdxtest-*/
+
+# Generated Visio installer bundles and their sidecar checksums
+visio-diagrams-v*.zip
+visio-diagrams-v*.zip.sha256
