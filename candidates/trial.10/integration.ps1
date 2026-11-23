@@ -1,22 +1,40 @@
 ﻿# Windows PowerShell 5.1. Dot-sourced by setup.ps1; source is UTF-8 with BOM.
-function Get-VisioCodexHosts {
-    $cli = Get-Command -Name codex.exe,codex.cmd,codex.ps1 -CommandType Application,ExternalScript -ErrorAction SilentlyContinue | Select-Object -First 1
-    $desktop = $null
-    if (Get-Command Get-AppxPackage -ErrorAction SilentlyContinue) {
-        try {
-            $package = Get-AppxPackage -Name OpenAI.Codex -ErrorAction Stop | Select-Object -First 1
-            if ($package) { $desktop = $package.InstallLocation }
-        } catch { }
+function Get-VisioAgentProfiles {
+    [ordered]@{
+        Codex     = @{label = 'Codex'; root = '.agents\skills'}
+        None      = @{label = '仅安装制图工具'; root = $null}
+        ClaudeCode = @{label = 'Claude Code'; root = '.claude\skills'}
+        Cursor    = @{label = 'Cursor'; root = '.cursor\skills'}
+        GeminiCLI = @{label = 'Gemini CLI'; root = '.gemini\skills'}
+        WorkBuddy = @{label = 'WorkBuddy'; root = '.workbuddy\skills'}
+        Custom    = @{label = '其他支持 SKILL.md 的 Agent（指定 Skill 父目录）'; root = $null}
+        DSH       = @{label = 'DeepSeek Harness (DSH)'; root = '.dsh\skills'}
     }
-    if (!$desktop -and $cli -and $cli.Source -match '(?i)^(.*[\\/]WindowsApps[\\/]OpenAI\.Codex_[^\\/]+)[\\/]') {
-        $desktop = $Matches[1] # CLI bundled in the installed desktop MSIX.
+}
+
+function Select-VisioAgent($Profiles, [string]$Previous, [switch]$NonInteractive) {
+    if ($NonInteractive) {
+        if ($Previous) { return $Previous }
+        return 'None'
     }
-    if (!$desktop) {
-        $app = Get-Process -Name Codex -ErrorAction SilentlyContinue |
-            Where-Object { $_.Path -match '[\\/]app[\\/]Codex\.exe$' } | Select-Object -First 1
-        if ($app) { $desktop = $app.Path }
+    $ids = @($Profiles.Keys)
+    Write-Host '请选择你使用的 Agent。安装器会将 Visio Skill 登记到所选位置。'
+    for ($i = 0; $i -lt $ids.Count; $i++) {
+        Write-Host ('{0}. {1}' -f ($i + 1), $Profiles[$ids[$i]].label)
     }
-    [pscustomobject]@{ cli = if ($cli) { $cli.Source } else { $null }; desktop = $desktop }
+    $prompt = '请输入编号或名称'
+    if ($Previous) { $prompt += "（回车沿用 $($Profiles[$Previous].label)）" }
+    while ($true) {
+        $answer = Read-Host $prompt
+        if ($null -eq $answer) { throw '未收到 Agent 选择。请在交互窗口重新运行 Install.cmd，或显式传入 AgentChoice。' }
+        $answer = $answer.Trim()
+        if (!$answer -and $Previous) { return $Previous }
+        for ($i = 0; $i -lt $ids.Count; $i++) {
+            $id = $ids[$i]
+            if ($answer -in @([string]($i + 1), $id, $Profiles[$id].label)) { return $id }
+        }
+        Write-Host '请输入上面列出的编号或名称。'
+    }
 }
 
 function Get-VisioDesktopCapability {
@@ -117,6 +135,16 @@ function Get-VisioFullPath([string]$Path) {
     [IO.Path]::GetFullPath($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path))
 }
 
+function Resolve-VisioDshSkillRoot([string]$DshDirectory, [string]$UserDirectory) {
+    # Match dsh-home-paths: expand only the current user's tilde, then resolve from cwd.
+    if ($DshDirectory -eq '~') {
+        $DshDirectory = $UserDirectory
+    } elseif ($DshDirectory -match '^~[\\/]') {
+        $DshDirectory = [IO.Path]::Combine($UserDirectory, $DshDirectory.Substring(2).TrimStart('\','/'))
+    }
+    [IO.Path]::GetFullPath([IO.Path]::Combine((Get-Location).ProviderPath, $DshDirectory, 'skills'))
+}
+
 function Get-VisioFileHash([string]$Path) {
     $stream = [IO.File]::OpenRead($Path)
     $sha = [Security.Cryptography.SHA256]::Create()
@@ -144,6 +172,12 @@ function Read-VisioRegistration([string]$InstallRoot) {
     if ($state.product -ne 'Hoshivela.VisioDiagrams' -or $state.installRoot -ne $InstallRoot -or
         !$state.skillRoot -or (Get-VisioFullPath $state.skillRoot) -ne $state.skillRoot) {
         throw "Skill 登记记录无效，已保留原文件：$file"
+    }
+    # trial.8 recorded only Codex. Keep the original on-disk bytes for the ownership check.
+    if (!$state.PSObject.Properties['agent']) { $state | Add-Member -NotePropertyName agent -NotePropertyValue 'Codex' }
+    $profiles = Get-VisioAgentProfiles
+    if (!$state.agent -or !$profiles.Contains($state.agent) -or $state.agent -eq 'None') {
+        throw "Skill 登记的 Agent 无法识别，已保留原文件：$file"
     }
     $state
 }
@@ -192,19 +226,37 @@ function Clear-VisioSkillDirectory([string]$Directory, [string]$Parent) {
     }
 }
 
-function Register-VisioCodex([string]$InstallRoot, [string]$SkillRoot) {
-    $state = Read-VisioRegistration $InstallRoot
-    if (!$SkillRoot) {
-        $SkillRoot = if ($state) { $state.skillRoot } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.agents\skills' }
+function Register-VisioSkill([string]$InstallRoot, [string]$Agent, [string]$SkillRoot, $State, [bool]$FollowDshHome = $false) {
+    if ($SkillRoot -notmatch '^(?:[A-Za-z]:[\\/]|[\\/]{2}[^\\/]+[\\/][^\\/]+)') {
+        throw '请提供 Skill 父目录的完整路径，例如 D:\我的工具\skills。'
     }
     $parent = (Get-VisioFullPath $SkillRoot).TrimEnd('\')
+    if ($parent.Length -le [IO.Path]::GetPathRoot($SkillRoot).TrimEnd('\').Length) {
+        throw '请选择用于存放 Skill 的文件夹。'
+    }
     $target = Join-Path $parent 'visio-diagrams'
+    if ($target -eq $InstallRoot -or $target.StartsWith($InstallRoot + '\', [StringComparison]::OrdinalIgnoreCase) -or
+        $InstallRoot.StartsWith($target + '\', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Skill 目录与制图工具安装目录重叠，请另选 Skill 父目录。'
+    }
     Assert-VisioPlainPath $target
-    if ($state -and $parent -ne $state.skillRoot) { throw "先卸载已登记的 Skill 再更换位置：$($state.skillRoot)" }
-    if ([IO.Directory]::Exists($target) -or [IO.File]::Exists($target)) { Assert-VisioRegistration $target $state }
+    if ([IO.Directory]::Exists($target) -or [IO.File]::Exists($target)) { Assert-VisioRegistration $target $State }
     $token = [guid]::NewGuid().ToString('N')
     $stage = Join-Path $parent ('.visio-stage-' + $token)
-    $backup = Join-Path $parent ('.visio-old-' + $token)
+    $oldTarget = $null
+    $backup = $null
+    if ($State) {
+        $oldTarget = Join-Path $State.skillRoot 'visio-diagrams'
+        Assert-VisioPlainPath $oldTarget
+        if ($oldTarget.StartsWith($target + '\', [StringComparison]::OrdinalIgnoreCase) -or
+            $target.StartsWith($oldTarget + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            throw '所选 Skill 目录与先前登记的目录嵌套，请另选位置。'
+        }
+        if ([IO.Directory]::Exists($oldTarget) -or [IO.File]::Exists($oldTarget)) {
+            Assert-VisioRegistration $oldTarget $State
+            $backup = Join-Path $State.skillRoot ('.visio-old-' + $token)
+        }
+    }
     $record = Join-Path $InstallRoot 'agent-registration.json'
     $pending = Join-Path $InstallRoot ('.agent-' + $token + '.tmp')
     $source = Join-Path $InstallRoot 'current\visio-diagrams'
@@ -214,6 +266,7 @@ function Register-VisioCodex([string]$InstallRoot, [string]$SkillRoot) {
     [void][IO.Directory]::CreateDirectory($parent)
     [void][IO.Directory]::CreateDirectory($stage)
     $installed = $false
+    $cleanupWarning = $null
     try {
         $hashes = [ordered]@{}
         foreach ($name in (Get-VisioSkillFiles)) {
@@ -234,13 +287,14 @@ function Register-VisioCodex([string]$InstallRoot, [string]$SkillRoot) {
             }
             $hashes[$name] = Get-VisioFileHash $dest
         }
-        $data = [ordered]@{product = 'Hoshivela.VisioDiagrams'; installRoot = $InstallRoot; skillRoot = $parent; files = $hashes}
+        $data = [ordered]@{product = 'Hoshivela.VisioDiagrams'; installRoot = $InstallRoot; skillRoot = $parent; agent = $Agent; files = $hashes}
+        if ($FollowDshHome) { $data.followDshHome = $true }
         $json = $data | ConvertTo-Json -Depth 4
         [IO.File]::WriteAllText((Join-Path $stage $marker), $json, $utf8)
         [IO.File]::WriteAllText($pending, $json, $utf8)
-        if ([IO.Directory]::Exists($target)) {
-            Assert-VisioRegistration $target $state
-            [IO.Directory]::Move($target, $backup)
+        if ($backup) {
+            Assert-VisioRegistration $oldTarget $State
+            [IO.Directory]::Move($oldTarget, $backup)
         }
         try {
             [IO.Directory]::Move($stage, $target)
@@ -249,15 +303,18 @@ function Register-VisioCodex([string]$InstallRoot, [string]$SkillRoot) {
             else { [IO.File]::Move($pending, $record) }
         } catch {
             if ($installed) { [IO.Directory]::Move($target, $stage) }
-            if ([IO.Directory]::Exists($backup)) { [IO.Directory]::Move($backup, $target) }
+            if ($backup) { [IO.Directory]::Move($backup, $oldTarget) }
             throw
         }
-        if ([IO.Directory]::Exists($backup)) { Clear-VisioSkillDirectory $backup $parent }
+        if ($backup) {
+            try { Clear-VisioSkillDirectory $backup $State.skillRoot }
+            catch { $cleanupWarning = "旧 Skill 已退出登记，其备份仍需清理：$backup。$($_.Exception.Message)" }
+        }
     } finally {
         if ([IO.File]::Exists($pending)) { [IO.File]::Delete($pending) }
         if ([IO.Directory]::Exists($stage)) { Clear-VisioSkillDirectory $stage $parent }
     }
-    $target
+    [pscustomobject]@{path = $target; warning = $cleanupWarning}
 }
 
 function Remove-VisioIntegration([string]$InstallRoot, [string]$SkillRoot) {
@@ -267,13 +324,26 @@ function Remove-VisioIntegration([string]$InstallRoot, [string]$SkillRoot) {
         if ($state) {
             if ($SkillRoot -and (Get-VisioFullPath $SkillRoot).TrimEnd('\') -ne $state.skillRoot) { throw '所选 Skill 位置与登记记录不符。' }
             $target = Join-Path $state.skillRoot 'visio-diagrams'
-            if (Test-Path -LiteralPath $target) {
+            $backup = $null
+            Assert-VisioPlainPath $target
+            if ([IO.Directory]::Exists($target) -or [IO.File]::Exists($target)) {
                 Assert-VisioRegistration $target $state
-                Clear-VisioSkillDirectory $target $state.skillRoot
+                $backup = Join-Path $state.skillRoot ('.visio-old-' + [guid]::NewGuid().ToString('N'))
+                [IO.Directory]::Move($target, $backup)
             }
-            [IO.File]::Delete((Join-Path $InstallRoot 'agent-registration.json'))
+            try { [IO.File]::Delete((Join-Path $InstallRoot 'agent-registration.json')) }
+            catch {
+                if ($backup) { [IO.Directory]::Move($backup, $target) }
+                throw
+            }
+            if ($backup) {
+                try { Clear-VisioSkillDirectory $backup $state.skillRoot }
+                catch {
+                    return [pscustomobject]@{status = 'removed'; message = "Skill 已退出登记，备份仍需清理：$backup。$($_.Exception.Message)"}
+                }
+            }
         }
-        [pscustomobject]@{status = 'removed'; message = '本安装登记的 Codex Skill 已移除或不存在。'}
+        [pscustomobject]@{status = 'removed'; message = '本安装登记的 Visio Skill 已移除或不存在。'}
     } catch {
         [pscustomobject]@{status = 'preserved'; message = "Skill 登记保留。$($_.Exception.Message)"}
     }
@@ -282,14 +352,14 @@ function Remove-VisioIntegration([string]$InstallRoot, [string]$SkillRoot) {
 function Invoke-VisioIntegration {
     param(
         [Parameter(Mandatory)][string]$InstallRoot,
-        [ValidateSet('Codex', 'None', 'Auto')][string]$AgentChoice = 'Auto',
+        [ValidateSet('Auto','Codex','None','ClaudeCode','Cursor','GeminiCLI','WorkBuddy','Custom','DSH')][string]$AgentChoice = 'Auto',
         [string]$SkillRoot,
         [switch]$NonInteractive
     )
     $InstallRoot = Get-VisioFullPath $InstallRoot
-    $hostsFound = Get-VisioCodexHosts
-    $hasCodex = $hostsFound.cli -or $hostsFound.desktop
-    $agent = [ordered]@{selection = $AgentChoice; status = 'not-registered'; path = $null; detected = $hostsFound}
+    $profiles = Get-VisioAgentProfiles
+    $agent = [ordered]@{selection = $AgentChoice; status = 'not-registered'; path = $null; discovery = 'NOT_VERIFIED'
+        activeSelection = $null; activePath = $null}
     $probes = [ordered]@{desktopVisio = Get-VisioDesktopCapability; drawing = $null}
     $notes = [Collections.Generic.List[string]]::new()
     try {
@@ -317,35 +387,66 @@ function Invoke-VisioIntegration {
     if (!$drawing.swimlaneStencil.ok) {
         $notes.Add('跨职能泳道模具不可用。需要泳道时请从已许可的 Visio 安装补齐 XFUNC_M.VSSX。')
     }
-    if ($AgentChoice -eq 'Auto' -and $hasCodex) {
-        $AgentChoice = 'Codex'
-        if (!$NonInteractive) {
-            Write-Host '检测到 Codex。1 登记 Visio 制图 Skill（默认），2 仅安装制图工具。'
-            do { $answer = Read-Host '请选择 1 或 2' } until ($answer -in @('', '1', '2'))
-            if ($answer -eq '2') { $AgentChoice = 'None' }
-        }
-    }
-    $agent.selection = $AgentChoice
     $status = if ($notes.Count) { 'partial' } else { 'ready' }
-    if ($AgentChoice -eq 'Codex') {
-        try {
-            $agent.path = Register-VisioCodex $InstallRoot $SkillRoot
-            $agent.status = 'registered'
-            $notes.Add("Codex Skill 已登记在 $($agent.path)。请重新打开 Codex，用自然语言描述需要绘制的 Visio 图。")
-        } catch {
-            $status = 'partial'
-            $agent.status = 'registration-failed'
-            $notes.Add("未完成 Codex Skill 登记。$($_.Exception.Message)")
+    try {
+        $previous = Read-VisioRegistration $InstallRoot
+        if ($previous) {
+            $agent.activeSelection = $previous.agent
+            $agent.activePath = Join-Path $previous.skillRoot 'visio-diagrams'
         }
-    } elseif ($AgentChoice -eq 'None') {
+        if ($AgentChoice -eq 'Auto') {
+            $AgentChoice = Select-VisioAgent $profiles $agent.activeSelection -NonInteractive:$NonInteractive
+        }
+        $agent.selection = $AgentChoice
+        if ($AgentChoice -eq 'None') {
+            $status = 'partial'
+            $removal = Remove-VisioIntegration $InstallRoot $SkillRoot
+            if ($removal.status -eq 'preserved') {
+                $agent.status = 'preserved'
+                $notes.Add($removal.message)
+            } else {
+                $agent.status = 'skipped'
+                $agent.activeSelection = $null
+                $agent.activePath = $null
+                if ($previous) { $notes.Add($removal.message) }
+                $notes.Add('仅安装制图工具。需要接入 Agent 时，重新运行 Install.cmd 并选择使用的 Agent。')
+            }
+        } else {
+            $profile = $profiles[$AgentChoice]
+            if (!$SkillRoot -and $AgentChoice -eq 'Custom' -and !$NonInteractive) {
+                $prompt = '输入该 Agent 用于发现 SKILL.md 的父目录完整路径，安装器将在其中创建 visio-diagrams'
+                if ($previous -and $previous.agent -eq 'Custom') { $prompt += "（回车沿用 $($previous.skillRoot)）" }
+                $SkillRoot = Read-Host $prompt
+            }
+            if (!$SkillRoot -and $previous -and $previous.agent -eq $AgentChoice -and !$previous.followDshHome) {
+                $SkillRoot = $previous.skillRoot
+            }
+            $followDshHome = $AgentChoice -eq 'DSH' -and !$SkillRoot
+            if (!$SkillRoot -and $profile.root) {
+                $userDirectory = $env:USERPROFILE
+                if (!$userDirectory) { $userDirectory = [Environment]::GetFolderPath('UserProfile') }
+                $SkillRoot = Join-Path $userDirectory $profile.root
+                if ($followDshHome -and ![string]::IsNullOrWhiteSpace($env:DSH_HOME)) {
+                    $SkillRoot = Resolve-VisioDshSkillRoot $env:DSH_HOME $userDirectory
+                }
+            }
+            if (!$SkillRoot) { throw '自定义接入需要提供该 Agent 的 Skill 父目录。重新运行 Install.cmd 选择目录，或通过 -SkillRoot 指定完整路径。' }
+            $registration = Register-VisioSkill $InstallRoot $AgentChoice $SkillRoot $previous $followDshHome
+            $agent.path = $registration.path
+            if ($registration.warning) { $status = 'partial'; $notes.Add($registration.warning) }
+            if ($AgentChoice -eq 'Custom' -and $agent.path.StartsWith($PSScriptRoot + '\', [StringComparison]::OrdinalIgnoreCase)) {
+                $notes.Add('所选 Skill 位于解压包内，删除解压包会一并移除 Skill。可以重新运行安装器，将 Skill 登记到 Agent 的长期使用目录。')
+            }
+            $agent.status = 'registered'
+            $agent.activeSelection = $AgentChoice
+            $agent.activePath = $agent.path
+            $notes.Add("已将 Visio Skill 登记到 $($agent.path)。请重新打开所选 Agent，在新会话中用自然语言制图，验证 Skill 是否可用。")
+        }
+    } catch {
         $status = 'partial'
-        $removal = Remove-VisioIntegration $InstallRoot $SkillRoot
-        if ($removal.status -eq 'preserved') { $status = 'partial'; $agent.status = 'preserved'; $notes.Add($removal.message) }
-        else { $agent.status = 'skipped'; $notes.Add('已选择仅安装制图工具。需要自然语言制图时重新运行安装器并选择 Codex。') }
-    }
-    if (!$hasCodex -and $AgentChoice -ne 'None') {
-        $status = 'partial'
-        $notes.Add('未检测到本机 Codex。自然语言制图入口尚未验证，请安装或启动 Codex 后重新运行安装器。')
+        $agent.status = 'registration-failed'
+        $notes.Add("未完成所选 Agent 的接入。$($_.Exception.Message)")
+        if ($agent.activePath) { $notes.Add("原登记位置：$($agent.activePath)。") }
     }
     if ($drawing.generation.ok) { $notes.Insert(0, '已用私有运行时生成普通 VSDX 并回读离线校验报告。') }
     if ($probes.desktopVisio.registered) { $notes.Add('已检测到桌面 Visio 登记；安装自检未执行打开、编辑和另存。') }

@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0rc6-agent-trial.8",
+  "version": "1.5.0rc6-agent-trial.10",
   "edition": "no-examples",
   "coreVersion": "1.5.0rc6",
   "baseZipSha256": "bff337c4d60dc195d3ad61d41ffcda803254129a6da4100111cafa37594eeeda",
@@ -42,8 +42,8 @@
     "visio-diagrams/scripts/visio_core/workflow_alignment.py": "02d785cc3b5b37ed016832084746e9324bd17110b323a025277331c7e7d4bf6c"
   },
   "trialFiles": {
-    "visio-diagrams/README.md": "59a0a4a453e3572943776c9ab87e6578b837eafd2d5c438e433582e63ad2351c",
-    "visio-diagrams/SKILL.md": "7a6fddaee66774f7f015a79f96384ff0902158cebd71943c68fc0561e7a41942",
+    "visio-diagrams/README.md": "0fff4264f104c42a59fcbd2f55bc299cd3806490b261d92b3cfa93c13c8e5b8d",
+    "visio-diagrams/SKILL.md": "083cebd794022eac9e8f7c844ac7327a7a114d5ae5dbd40370bf9681ecbb85e2",
     "visio-diagrams/agents/openai.yaml": "ebfa8083a6e2931fb5115ac594f1cedbdfb836f65c8ab79ae4eeb08c59a3856c",
     "visio-diagrams/pyproject.toml": "2d3028a02c2c79620c0c5f1779b106fd164bd61a413acab7b0f6bb1274cc15b6",
     "visio-diagrams/references/fonts.md": "469778f7c6adfbc0cc8a22aab5bb99e26ac8f7fe8e21bfe95010200b4f6a31af",

@@ -1,15 +1,15 @@
 {
-  "version": "1.5.0rc6-agent-trial.8",
+  "version": "1.5.0rc6-agent-trial.10",
   "runtimeSha256": "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159",
   "files": {
     "Install.cmd": "39139ac8a44bb23b54a5634b0dbf7e85e99707b6e0fb7151e1463ccd21a0ed35",
     "Uninstall.cmd": "af3914137013022cc948fe2cbdccef7b09f289124c5a175f392139d2ed92e8c2",
-    "integration.ps1": "7ba0b72427b2f0f42784553e0ad0deea354d3bd977813451594dbe3f914ed175",
+    "integration.ps1": "fdb916168652ea55eb07b00b0f4592d191f60071c962d3823b3738649677d871",
     "runtime/python-embed.zip": "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159",
-    "setup.ps1": "2c414e5e34c585db6125cc3fe7b1eb92cf095ce6927a3be8baee02a582a3aac9",
-    "visio-diagrams/README.md": "59a0a4a453e3572943776c9ab87e6578b837eafd2d5c438e433582e63ad2351c",
-    "visio-diagrams/SKILL.md": "7a6fddaee66774f7f015a79f96384ff0902158cebd71943c68fc0561e7a41942",
-    "visio-diagrams/TRIAL-MANIFEST.json": "835edf3ab7e16556c9c1dcedf483adec3ede30a9e99a342bffe208d72a96867c",
+    "setup.ps1": "ab919a30ddc83c89488ba842c5e1c7993e98314ddabbce2ead191bf153ad8663",
+    "visio-diagrams/README.md": "0fff4264f104c42a59fcbd2f55bc299cd3806490b261d92b3cfa93c13c8e5b8d",
+    "visio-diagrams/SKILL.md": "083cebd794022eac9e8f7c844ac7327a7a114d5ae5dbd40370bf9681ecbb85e2",
+    "visio-diagrams/TRIAL-MANIFEST.json": "3b4219780d02a11113cb047675d5761602f7a1e4edaebe41bd7cfbe844270e9e",
     "visio-diagrams/agents/openai.yaml": "ebfa8083a6e2931fb5115ac594f1cedbdfb836f65c8ab79ae4eeb08c59a3856c",
     "visio-diagrams/pyproject.toml": "2d3028a02c2c79620c0c5f1779b106fd164bd61a413acab7b0f6bb1274cc15b6",
     "visio-diagrams/references/fonts.md": "469778f7c6adfbc0cc8a22aab5bb99e26ac8f7fe8e21bfe95010200b4f6a31af",
@@ -54,6 +54,6 @@
     "visio-diagrams/scripts/visio_core/text_layout.py": "16a8a97af0de53a646b35f0bebc49acb20b86047461501ea6dba10aef2e7dcca",
     "visio-diagrams/scripts/visio_core/vsdx_writer.py": "6f9711974053ac75c00238cc801d79ef3eb33438a1f7cd916baca1888b62b987",
     "visio-diagrams/scripts/visio_core/workflow_alignment.py": "02d785cc3b5b37ed016832084746e9324bd17110b323a025277331c7e7d4bf6c",
-    "安装与首次使用.txt": "7c25d56965356013dcd4b8d5bb5b9dc870bef79db0d2d3854c0e317f3adf5eb8"
+    "安装与首次使用.txt": "d6802cbb6f47e78151c71df69aa620beb401734ccfb92b29cb96bd166e6902b3"
   }
 }

@@ -1,17 +1,21 @@
-# Visio 制图工具 · 1.5.0rc6-agent-trial.8
+# Visio 制图工具 · 1.5.0rc6-agent-trial.10
 
 输入为当前任务的 UTF-8 JSON，输出为可编辑的单页 VSDX。制图内核版本为 `1.5.0rc6`。节点、方向、文字、泳道归属和样式由当前输入描述。字段与限制见[输入格式](references/input-format.md)。
 
 ## Windows 用户安装与首次使用
 
 1. 在 Windows 10 或 11 的 x64 电脑上，把整个 ZIP 解压到一个普通用户目录。基本流程图需可用的微软雅黑及基本流程图模具 BASFLO_M.VSSX。需要桌面验证时安装带许可的 Microsoft Visio；泳道还需 XFUNC_M.VSSX。
-2. 双击解压目录最外层的 **Install.cmd**。安装器在当前用户目录部署随包附带的私有 Python 和内核。需要从自然语言制图时，在安装窗口选择已检测到的 **Codex**。读完自检结果，先处理列出的缺项。
-3. 完全退出并重新打开 Codex。在存放图纸的工作目录开启新会话，直接描述需要绘制的流程、交付位置和必要的视觉要求。Skill 会整理输入并生成可编辑的 VSDX。用户无需准备 JSON 或命令。
-4. 默认安装重复运行同一个 Install.cmd 即可复查或更新。从安装包双击 **Uninstall.cmd** 可按当前用户移除本项目管理的文件；生成的图纸请保存在自己的工作目录。
+2. 双击解压目录最外层的 **Install.cmd**，在菜单中选择自己使用的本地 Agent。Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）只需选名称，安装器会部署随包附带的私有 Python 和内核，并把同一份制图 Skill 写入所选 Agent 的用户目录。若只需要命令行或 Python API，可选“仅安装制图工具”。
+3. 安装结束后，查看自检结果和 Skill 登记位置。完全退出并重新打开所选 Agent，在存放图纸的目录新建本地会话，用自然语言描述要画的业务、必要的视觉要求和交付位置。核对生成的 VSDX 和验证回执，即可确认这台电脑上从需求到出图的流程已跑通。
+4. 更换 Agent 或复查安装时，再次双击 **Install.cmd**。选择另一 Agent 会将本工具管理的 Skill 转到新位置，选择“仅安装制图工具”会移除先前的登记。要卸载，请双击 **Uninstall.cmd**。将自己的图纸保存在工作目录。
+
+使用 DSH 时，输入 `8` 或 `DSH`。默认登记在 `%USERPROFILE%\.dsh\skills\visio-diagrams`。若已设置 `DSH_HOME`，安装器使用其中的 `skills` 目录。相对路径按启动目录解析，绝对路径在不同工作目录中均指向同一位置。以后更改 DSH 主目录，重新运行安装器并沿用 DSH，即可迁移原登记。若 DSH 配置为只加载自定义技能目录，可用 `Install.cmd -AgentChoice DSH -SkillRoot "你的技能父目录完整路径"` 登记到该目录。[DSH 文件系统技能提供器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md)
+
+使用其他 Agent 时，请先确认它能从本地目录加载 `SKILL.md`，并能调用 Windows PowerShell。选择“其他支持 SKILL.md 的 Agent”，按提示输入它的 Skill 父目录。安装器会在该目录内创建 `visio-diagrams` 子目录。若客户端没有显示该技能，先核对安装窗口给出的登记位置和客户端的技能启用状态，再开启新会话。
 
 从 trial.7 或更早的手工解压版迁移时，请保留旧目录并按上述步骤安装到新的默认位置。已有的未托管同名目录会被保留。
 
-默认安装目录为 `%LOCALAPPDATA%\Hoshivela\VisioDiagrams`。该目录的 `capabilities.json` 记录自检结果。完整能力可用、已安装但部分能力受限、安装失败三种结果会在安装窗口分别说明。注册时如已有同名 Skill，请按提示保全已有文件后再处理冲突。
+默认安装目录为 `%LOCALAPPDATA%\Hoshivela\VisioDiagrams`。`capabilities.json` 记录本机私有运行时、字体、模具、普通图生成和桌面 Visio 登记的检查结果，以及所选 Agent 的 Skill 写入状态。安装窗口会显示安装完成、部分能力尚未就绪或安装失败。显示“Skill 已登记”表示文件已写入指定目录。客户端能否发现 Skill 并调用内核生成图纸，需按第 3 步在所选 Agent 的新会话中确认。若登记时遇到同名 Skill 冲突，请按提示保全已有文件。
 
 ### 首发验证范围
 

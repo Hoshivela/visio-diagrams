@@ -2,7 +2,7 @@
 name: visio-diagrams
 description: 根据用户的自然语言或业务数据绘制可编辑的 Microsoft Visio 图（.vsdx），包括流程图、架构图、关系图以及横向和纵向泳道图。也用于核验这些图纸的布局、连线与原生可编辑性。
 metadata:
-  version: "1.5.0rc6-agent-trial.8"
+  version: "1.5.0rc6-agent-trial.10"
 ---
 
 # Visio 制图

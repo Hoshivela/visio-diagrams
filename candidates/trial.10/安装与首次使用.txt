@@ -1,0 +1,23 @@
+﻿Hoshivela Visio 制图工具 · Windows x64 安装候选包
+内核 1.5.0rc6 · 构建 1.5.0rc6-agent-trial.10
+
+安装
+1. 在 Windows 10 或 Windows 11 的 64 位 x64 电脑上，右键 ZIP，选择“全部解压”。
+2. 双击解压目录里的 Install.cmd。安装器会部署当前用户专用的 Python 和制图内核，无需另装 Python 或设置 PATH。
+3. 在菜单中选择自己使用的本地 Agent。Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）只需选名称，安装器会自动写入制图 Skill。使用 DSH 时输入 8 或 DSH，默认位置为 %USERPROFILE%\.dsh\skills。如果已设置 DSH_HOME，则使用 %DSH_HOME%\skills。使用其他能读取本地 SKILL.md 并调用 Windows PowerShell 的 Agent 时，选“其他”，输入该 Agent 的 Skill 父目录。如果只用命令行，可选“仅安装制图工具”。
+4. 查看窗口中的安装结果、已登记的 Skill 位置及缺项。“已登记”表示制图 Skill 文件已写入所选目录。请按下方“第一次绘图”确认客户端能发现并使用该技能。自检失败时，按窗口提示处理后重新运行 Install.cmd。
+
+第一次绘图
+完全退出并重新打开所选 Agent，在图纸存放目录中新建本地会话。用自己的话说明要画的流程、必须保留的关系和输出要求。完成后查看生成的 .vsdx 和校验结果。如果客户端未显示 visio-diagrams，请核对安装窗口列出的 Skill 位置，以及客户端中该技能是否已启用。如需验证原生编辑性，可在同一请求中要求用桌面 Visio 打开、移动有连线的节点、另存并重开检查。
+
+使用条件
+普通流程图需要基本流程模具 BASFLO_M.VSSX 和所需字体，默认微软雅黑。桌面原生验证需要 Microsoft Visio，泳道入口另需跨职能模具 XFUNC_M.VSSX。通过已获授权的 Office / Visio 安装渠道补足缺项。此包只附带制图程序、开源 Python 运行时和使用说明。
+目前的正式业务验证覆盖单页顺序流程及单判断分流终止；其余候选图型和跨电脑安装情况分别记录。
+
+安装记录
+默认安装在 %LOCALAPPDATA%\Hoshivela\VisioDiagrams。将此路径粘贴到资源管理器地址栏即可打开，capabilities.json 保存自检结果。遇到失败可保留窗口列出的安装日志供复核。
+
+维护
+旧版 trial.7 及更早手工解压版可原样保留，使用新包默认安装目录并列安装。不要把旧解压目录选作新安装的目标。
+更换 Agent 时，双击 Install.cmd 并重新选择，安装器会将本工具管理的 Skill 转到新位置。选择“仅安装制图工具”会移除先前的登记。升级时使用新包的 Install.cmd。已有或自行修改的同名 Skill 如发生冲突，请按提示保全原文件。要移除本项目，请双击解压目录中的 Uninstall.cmd。请将自己的 VSDX 保存在工作目录。
+详细说明见 visio-diagrams 文件夹内的 README.md。
