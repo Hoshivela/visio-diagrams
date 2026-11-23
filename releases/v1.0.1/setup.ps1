@@ -3,7 +3,7 @@
 param(
     [ValidateSet('Install','Uninstall')][string]$Action = 'Install',
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'Hoshivela\VisioDiagrams'),
-    [ValidateSet('Auto','Codex','None','ClaudeCode','Cursor','GeminiCLI','WorkBuddy','Custom','DSH')][string]$AgentChoice = 'Auto',
+    [ValidateSet('Auto','Codex','None','ClaudeCode','Cursor','GeminiCLI','WorkBuddy','Custom','DSH','DoubaoWork')][string]$AgentChoice = 'Auto',
     [string]$SkillRoot,
     [switch]$NonInteractive
 )

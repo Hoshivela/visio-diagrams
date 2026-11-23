@@ -9,6 +9,7 @@ function Get-VisioAgentProfiles {
         WorkBuddy = @{label = 'WorkBuddy'; root = '.workbuddy\skills'}
         Custom    = @{label = '其他支持 SKILL.md 的 Agent（指定 Skill 父目录）'; root = $null}
         DSH       = @{label = 'DeepSeek Harness (DSH)'; root = '.dsh\skills'}
+        DoubaoWork = @{label = '豆包工作（Doubao Work）'; root = $null; aliases = @('豆包工作', '豆包 Work', '豆包Work', 'Doubao Work')}
     }
 }
 
@@ -31,7 +32,7 @@ function Select-VisioAgent($Profiles, [string]$Previous, [switch]$NonInteractive
         if (!$answer -and $Previous) { return $Previous }
         for ($i = 0; $i -lt $ids.Count; $i++) {
             $id = $ids[$i]
-            if ($answer -in @([string]($i + 1), $id, $Profiles[$id].label)) { return $id }
+            if ($answer -in @([string]($i + 1), $id, $Profiles[$id].label) -or $answer -in $Profiles[$id]['aliases']) { return $id }
         }
         Write-Host '请输入上面列出的编号或名称。'
     }
@@ -143,6 +144,68 @@ function Resolve-VisioDshSkillRoot([string]$DshDirectory, [string]$UserDirectory
         $DshDirectory = [IO.Path]::Combine($UserDirectory, $DshDirectory.Substring(2).TrimStart('\','/'))
     }
     [IO.Path]::GetFullPath([IO.Path]::Combine((Get-Location).ProviderPath, $DshDirectory, 'skills'))
+}
+
+function Resolve-VisioDoubaoSkillRoot([string]$PreviousRoot, [switch]$NonInteractive, [string]$ExplicitRoot) {
+    $suffix = '.doubaowork\agent_mode\workspace\.user_skills'
+    if ($ExplicitRoot) {
+        if ($ExplicitRoot -notmatch '^(?:[A-Za-z]:[\\/]|[\\/]{2}[^\\/]+[\\/][^\\/]+)') {
+            throw "请用 -SkillRoot 指定豆包工作配置中 $suffix 的绝对路径。"
+        }
+        $path = (Get-VisioFullPath $ExplicitRoot).TrimEnd('\')
+        if (!($path.EndsWith('\' + $suffix, [StringComparison]::OrdinalIgnoreCase)) -or ![IO.Directory]::Exists($path)) {
+            throw "指定的目录不是已初始化的豆包工作 Skill 目录。请先在工作模式中启动本地任务，再选择该配置下实际存在的 $suffix。"
+        }
+        Assert-VisioPlainPath $path
+        return $path
+    }
+    $bases = @(
+        if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'DoubaoWork\User Data' }
+        if ($env:APPDATA) { Join-Path $env:APPDATA 'DoubaoWork' }
+    )
+    $roots = [Collections.Generic.List[string]]::new()
+    foreach ($base in $bases) {
+        if (![IO.Directory]::Exists($base)) { continue }
+        try { Assert-VisioPlainPath $base } catch { continue }
+        $profiles = @(Get-ChildItem -LiteralPath $base -Directory -Force -ErrorAction SilentlyContinue |
+            Sort-Object Name | Select-Object -ExpandProperty FullName)
+        foreach ($directory in (@($base) + $profiles)) {
+            $path = Join-Path $directory $suffix
+            if (![IO.Directory]::Exists($path)) { continue }
+            try { Assert-VisioPlainPath $path } catch { continue }
+            if ($roots -notcontains $path) { $roots.Add($path) }
+        }
+    }
+    # A previous explicit -SkillRoot may be outside the standard profile directories.
+    if ($PreviousRoot -and [IO.Directory]::Exists($PreviousRoot)) {
+        Assert-VisioPlainPath $PreviousRoot
+        if ($roots -notcontains $PreviousRoot) { $roots.Add($PreviousRoot) }
+    } else {
+        $PreviousRoot = $null
+    }
+    if (!$roots.Count) {
+        throw '未找到豆包工作的本地 Skill 目录。请先打开豆包工作，在工作模式中新建并启动一个本地任务，再运行 Install.cmd。'
+    }
+    if ($roots.Count -eq 1) { return $roots[0] }
+    if ($NonInteractive) {
+        if ($PreviousRoot) { return $PreviousRoot }
+        throw ("找到多个豆包工作配置，请重新运行 Install.cmd 选择当前任务的配置，或用 -SkillRoot 指定其中一个完整目录：" +
+            [Environment]::NewLine + ($roots -join [Environment]::NewLine))
+    }
+    Write-Host '请选择当前豆包工作任务所属的配置。'
+    for ($i = 0; $i -lt $roots.Count; $i++) { Write-Host ('{0}. {1}' -f ($i + 1), $roots[$i]) }
+    $prompt = '请输入配置编号'
+    if ($PreviousRoot) { $prompt += "（回车沿用 $PreviousRoot）" }
+    while ($true) {
+        $answer = Read-Host $prompt
+        if ($null -eq $answer) { throw '未收到豆包工作配置选择。请重新运行 Install.cmd 或通过 -SkillRoot 指定目录。' }
+        if (!$answer.Trim() -and $PreviousRoot) { return $PreviousRoot }
+        $index = 0
+        if ([int]::TryParse($answer, [ref]$index) -and $index -ge 1 -and $index -le $roots.Count) {
+            return $roots[$index - 1]
+        }
+        Write-Host '请输入上面列出的配置编号。'
+    }
 }
 
 function Get-VisioFileHash([string]$Path) {
@@ -352,7 +415,7 @@ function Remove-VisioIntegration([string]$InstallRoot, [string]$SkillRoot) {
 function Invoke-VisioIntegration {
     param(
         [Parameter(Mandatory)][string]$InstallRoot,
-        [ValidateSet('Auto','Codex','None','ClaudeCode','Cursor','GeminiCLI','WorkBuddy','Custom','DSH')][string]$AgentChoice = 'Auto',
+        [ValidateSet('Auto','Codex','None','ClaudeCode','Cursor','GeminiCLI','WorkBuddy','Custom','DSH','DoubaoWork')][string]$AgentChoice = 'Auto',
         [string]$SkillRoot,
         [switch]$NonInteractive
     )
@@ -418,7 +481,10 @@ function Invoke-VisioIntegration {
                 if ($previous -and $previous.agent -eq 'Custom') { $prompt += "（回车沿用 $($previous.skillRoot)）" }
                 $SkillRoot = Read-Host $prompt
             }
-            if (!$SkillRoot -and $previous -and $previous.agent -eq $AgentChoice -and !$previous.followDshHome) {
+            if ($AgentChoice -eq 'DoubaoWork') {
+                $previousRoot = if ($previous -and $previous.agent -eq $AgentChoice) { $previous.skillRoot }
+                $SkillRoot = Resolve-VisioDoubaoSkillRoot $previousRoot -NonInteractive:$NonInteractive -ExplicitRoot $SkillRoot
+            } elseif (!$SkillRoot -and $previous -and $previous.agent -eq $AgentChoice -and !$previous.followDshHome) {
                 $SkillRoot = $previous.skillRoot
             }
             $followDshHome = $AgentChoice -eq 'DSH' -and !$SkillRoot

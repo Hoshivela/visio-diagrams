@@ -1,11 +1,11 @@
-# Visio 制图工具 · 1.5.0rc6-agent-trial.10
+# Visio 制图工具 · v1.0.1
 
 输入为当前任务的 UTF-8 JSON，输出为可编辑的单页 VSDX。制图内核版本为 `1.5.0rc6`。节点、方向、文字、泳道归属和样式由当前输入描述。字段与限制见[输入格式](references/input-format.md)。
 
 ## Windows 用户安装与首次使用
 
 1. 在 Windows 10 或 11 的 x64 电脑上，把整个 ZIP 解压到一个普通用户目录。基本流程图需可用的微软雅黑及基本流程图模具 BASFLO_M.VSSX。需要桌面验证时安装带许可的 Microsoft Visio；泳道还需 XFUNC_M.VSSX。
-2. 双击解压目录最外层的 **Install.cmd**，在菜单中选择自己使用的本地 Agent。Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）只需选名称，安装器会部署随包附带的私有 Python 和内核，并把同一份制图 Skill 写入所选 Agent 的用户目录。若只需要命令行或 Python API，可选“仅安装制图工具”。
+2. 双击解压目录最外层的 **Install.cmd**，在菜单中选择自己使用的本地 Agent。菜单提供 Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）和豆包工作（DoubaoWork）。安装器会部署随包附带的私有 Python 和内核，并把同一份制图 Skill 写入所选 Agent 的用户目录。若只需要命令行或 Python API，可选“仅安装制图工具”。
 3. 安装结束后，查看自检结果和 Skill 登记位置。完全退出并重新打开所选 Agent，在存放图纸的目录新建本地会话，用自然语言描述要画的业务、必要的视觉要求和交付位置。核对生成的 VSDX 和验证回执，即可确认这台电脑上从需求到出图的流程已跑通。
 4. 更换 Agent 或复查安装时，再次双击 **Install.cmd**。选择另一 Agent 会将本工具管理的 Skill 转到新位置，选择“仅安装制图工具”会移除先前的登记。要卸载，请双击 **Uninstall.cmd**。将自己的图纸保存在工作目录。
 
@@ -16,6 +16,15 @@
 从 trial.7 或更早的手工解压版迁移时，请保留旧目录并按上述步骤安装到新的默认位置。已有的未托管同名目录会被保留。
 
 默认安装目录为 `%LOCALAPPDATA%\Hoshivela\VisioDiagrams`。`capabilities.json` 记录本机私有运行时、字体、模具、普通图生成和桌面 Visio 登记的检查结果，以及所选 Agent 的 Skill 写入状态。安装窗口会显示安装完成、部分能力尚未就绪或安装失败。显示“Skill 已登记”表示文件已写入指定目录。客户端能否发现 Skill 并调用内核生成图纸，需按第 3 步在所选 Agent 的新会话中确认。若登记时遇到同名 Skill 冲突，请按提示保全已有文件。
+
+### 豆包工作（Windows 桌面版）
+
+1. 先用准备制图的账号打开豆包桌面版，切换到工作模式，启动一次本地任务，让客户端生成该配置的工作目录。
+2. 双击 **Install.cmd**，输入 `9` 或 `DoubaoWork`。安装器查找 `%LOCALAPPDATA%\DoubaoWork\User Data` 和 `%APPDATA%\DoubaoWork` 下已有的配置。只有一个可用配置时自动选用。有多个时，按安装窗口列出的路径选当前任务对应的配置。没有可用配置时，回到豆包工作启动本地任务，再运行安装器。登记位置为 `<配置目录>\.doubaowork\agent_mode\workspace\.user_skills\visio-diagrams`。[火山引擎的豆包工作技能目录说明](https://docs.volcengine.com/docs/agent-toolkit/force-skill-installation-guide?lang=zh)
+3. 重新打开豆包工作，在同一配置中新建允许使用本机文件和 Windows PowerShell 的工作任务。用自然语言提出制图需求，指定一个可写的输出目录，核对该目录里的 VSDX 和验证回执。此版本提供本地技能登记，豆包客户端自动发现 Skill、调用内核生成 VSDX 的完整流程尚待实机验证。
+4. 更换豆包配置时，在目标配置中先启动一次本地任务，再运行 **Install.cmd** 选择豆包工作和对应路径。安装器迁移本工具管理的登记，每次登记到一个配置。换用其他 Agent 时按安装菜单选择其名称。
+
+无人值守安装若首次遇到多个配置，使用 `Install.cmd -NonInteractive -AgentChoice DoubaoWork -SkillRoot "目标配置的 .user_skills 完整路径"` 指定其中一个。重复安装时可沿用仍有效的登记。
 
 ### 首发验证范围
 
@@ -69,3 +78,7 @@ python .\render-swimlane.py "C:\工作目录\定位流程.json" "C:\工作目录
 用 `-Planned` 指向不同位置的布局文件，用 `-MoveNode` 指定要抽查的节点 ID。对修订稿，可用 `python -m visio_core.review compare --help` 查看输入差异检查参数，或用 `python -m visio_core.review summarize --help` 查看生成、原生核验和审阅回执的汇总参数。
 
 只有当前任务明确要求额外的样式变换时才单独调用 `style-workflow.ps1`。它从指定的 VSDX 和最终布局创建新副本，`-NoteNode` 和 `-EndNode` 选取对应节点，`-PreserveColors` 可保留原配色。`python .\review-style.py --help` 提供副本与来源、文字、箭头及端点的核对入口。
+
+## 许可
+
+Visio 制图工具采用 MIT 许可证，全文见安装包根目录和安装后工具目录中的 `LICENSE`。随包附带的 Python 运行时及其组件沿用上游许可证，详见 `runtime/python-embed.zip` 内的 `LICENSE.txt`。

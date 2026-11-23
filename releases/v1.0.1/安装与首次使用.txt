@@ -1,11 +1,17 @@
-﻿Hoshivela Visio 制图工具 · Windows x64 安装候选包
-内核 1.5.0rc6 · 构建 1.5.0rc6-agent-trial.10
+﻿Hoshivela Visio 制图工具 · v1.0.1 · Windows x64 安装包
+制图内核 1.5.0rc6
 
 安装
 1. 在 Windows 10 或 Windows 11 的 64 位 x64 电脑上，右键 ZIP，选择“全部解压”。
 2. 双击解压目录里的 Install.cmd。安装器会部署当前用户专用的 Python 和制图内核，无需另装 Python 或设置 PATH。
-3. 在菜单中选择自己使用的本地 Agent。Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）只需选名称，安装器会自动写入制图 Skill。使用 DSH 时输入 8 或 DSH，默认位置为 %USERPROFILE%\.dsh\skills。如果已设置 DSH_HOME，则使用 %DSH_HOME%\skills。使用其他能读取本地 SKILL.md 并调用 Windows PowerShell 的 Agent 时，选“其他”，输入该 Agent 的 Skill 父目录。如果只用命令行，可选“仅安装制图工具”。
+3. 在菜单中选择自己使用的本地 Agent。Codex、WorkBuddy、Claude Code、Cursor、Gemini CLI、DeepSeek Harness（DSH）只需选名称，安装器会自动写入制图 Skill。使用 DSH 时输入 8 或 DSH，默认位置为 %USERPROFILE%\.dsh\skills。如果已设置 DSH_HOME，则使用 %DSH_HOME%\skills。豆包工作请选择第 9 项，按下节确认配置。使用其他能读取本地 SKILL.md 并调用 Windows PowerShell 的 Agent 时，选“其他”，输入该 Agent 的 Skill 父目录。如果只用命令行，可选“仅安装制图工具”。
 4. 查看窗口中的安装结果、已登记的 Skill 位置及缺项。“已登记”表示制图 Skill 文件已写入所选目录。请按下方“第一次绘图”确认客户端能发现并使用该技能。自检失败时，按窗口提示处理后重新运行 Install.cmd。
+
+豆包工作（Windows 桌面版）
+1. 用要制图的账号打开豆包桌面版，切换到工作模式并启动一次本地任务。运行 Install.cmd，输入 9 或 DoubaoWork。
+2. 安装器在 %LOCALAPPDATA%\DoubaoWork\User Data 和 %APPDATA%\DoubaoWork 下查找已有配置。找到单个可用配置时自动选用。找到多个时，按显示的路径选择本次任务使用的配置。没有找到时，先在该账号下启动本地任务，再运行安装器。
+3. 登记位置为 <配置目录>\.doubaowork\agent_mode\workspace\.user_skills\visio-diagrams。重新打开豆包工作，在同一配置中新建能访问本机文件和 Windows PowerShell 的工作任务，按下节完成绘图。豆包客户端从自动加载 Skill 到生成 VSDX 的完整流程尚待实机验证。
+4. 更换豆包配置时，先在目标配置中启动一次本地任务，再运行安装器，选择豆包工作和对应路径。安装器会将本工具管理的登记转到该配置。换用其他 Agent 时，在安装菜单选择其名称。
 
 第一次绘图
 完全退出并重新打开所选 Agent，在图纸存放目录中新建本地会话。用自己的话说明要画的流程、必须保留的关系和输出要求。完成后查看生成的 .vsdx 和校验结果。如果客户端未显示 visio-diagrams，请核对安装窗口列出的 Skill 位置，以及客户端中该技能是否已启用。如需验证原生编辑性，可在同一请求中要求用桌面 Visio 打开、移动有连线的节点、另存并重开检查。

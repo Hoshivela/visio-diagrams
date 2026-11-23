@@ -1,16 +1,16 @@
 # Visio 技术方案制图 / visio-diagrams
 
-## v1.0.0 正式版 · Windows x64
+## v1.0.1 正式版 · Windows x64
 
-[下载无示例安装包](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.0/visio-diagrams-v1.0.0.zip) · [SHA-256 校验文件](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.0/visio-diagrams-v1.0.0.zip.sha256) · [安装与使用说明](candidates/trial.10/visio-diagrams/README.md)
+用自然语言描述业务流程，生成可在 Microsoft Visio 中编辑的单页 VSDX。正式验收已覆盖顺序流程和单判断分流终止流程。架构图、关系图、横向与纵向泳道已有制图入口，正式业务用例仍待扩充。
 
-用自然语言描述业务流程，生成可在 Microsoft Visio 中编辑的单页 VSDX。v1.0.0 正式支持已验收的顺序流程和单判断分流终止流程。架构图、关系图、横向与纵向泳道已有制图入口，正式业务用例覆盖仍待扩充。
+[下载 Windows 无示例安装包](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.1/visio-diagrams-v1.0.1.zip) · [SHA-256 校验文件](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.1/visio-diagrams-v1.0.1.zip.sha256) · [安装与使用说明](releases/v1.0.1/visio-diagrams/README.md)
 
-完整解压安装包，双击 **Install.cmd**，选择 Codex、Claude Code、Cursor、Gemini CLI、WorkBuddy 或 DeepSeek Harness（DSH）。使用 DSH 时输入 `8` 或 `DSH`。安装完成后重新打开所选 Agent，在新会话中描述要绘制的图。重装可以切换 Agent，卸载可运行 **Uninstall.cmd**。
+完整解压 ZIP，双击 **Install.cmd**，选择自己使用的 Agent。安装器提供 Codex、Claude Code、Cursor、Gemini CLI、WorkBuddy、DeepSeek Harness（DSH）和豆包工作七个预设。也可从仓库运行 `releases/v1.0.1/Install.cmd`。已安装 v1.0.0 的用户使用同一入口升级。
 
-产品版本 **v1.0.0** 对应已验收的技术构建 `1.5.0rc6-agent-trial.10`，内核为 `1.5.0rc6`。安装包内的版本标识沿用该构建号，已安装 trial.10 的用户可直接继续使用。克隆仓库后也可运行 `candidates/trial.10/Install.cmd`。安装包 SHA-256 为 `15752051d9c7f133ea2189713da3703451515c74f26d0fede5be7f32a2c8b666`。
+**豆包工作**用户请先在 Windows 客户端的工作模式中启动一次本地任务，然后在安装菜单选 **9**。如有多个配置，选择当前任务对应的目录。完成登记后，在同一配置新建任务并描述制图需求。豆包客户端从自然语言请求到首张图的完整流程仍待实机验证。[豆包工作技能目录说明](https://docs.volcengine.com/docs/agent-toolkit/force-skill-installation-guide?lang=zh)
 
-适用于 Windows 10/11 x64，随包提供私有 Python 3.14.10。普通图需要本机可用的字体与基本流程图模具，原生打开、编辑及保存核验需要桌面 Visio。交付前请核对图上的业务关系与回执。遇到 `DEGRADED` 时，保留首稿与回执，按诊断修改后另存复验。[回执与使用说明](candidates/trial.10/visio-diagrams/README.md)
+适用于 Windows 10/11 x64，内含私有 Python 3.14.10。普通图需要可用的字体与基本流程图模具，原生编辑核验需要桌面 Visio。制图内核版本为 `1.5.0rc6`。项目采用 MIT 许可证，随包的 Python 及其组件保留原有许可。[MIT 许可证](LICENSE)
 
 ## 历史开发预览版
 
