@@ -1,3 +1,11 @@
+# v1.0.0 · Windows x64 正式版
+
+正式发布可编辑的单页业务流程图，验收范围覆盖顺序操作和单判断分流终止。四个正式业务用例覆盖创建、导入、导出和删除。架构图、关系图、横向与纵向泳道保留现有入口，正式业务覆盖仍待扩充。
+
+本版支持按当前用户安装、切换 Agent 与卸载。Codex、Claude Code、Cursor、Gemini CLI、WorkBuddy 和 DeepSeek Harness 均有安装预设。已验证六种登记路径。用户在纯净 Windows 11、Visio 和 DSH 环境中完成实际制图，同输入复画的 VSDX 内部 14 个文件一致。另用桌面 Visio 移动节点、保存并重开，三条连线仍连在原端口。
+
+正式附件沿用技术构建 `1.5.0rc6-agent-trial.10` 的完整字节，制图内核为 `1.5.0rc6`。正式安装包名为 `visio-diagrams-v1.0.0.zip`，SHA-256 为 `15752051d9c7f133ea2189713da3703451515c74f26d0fede5be7f32a2c8b666`。[发行与下载](https://github.com/Hoshivela/visio-diagrams/releases/tag/v1.0.0)
+
 # 1.5.0rc6-agent-trial.10 · Windows x64 试用版
 
 安装时可手动选择六款 Agent，或指定其他兼容 Agent 的技能目录。DeepSeek Harness（DSH）默认登记到 `%USERPROFILE%\.dsh\skills`，也支持 `DSH_HOME`。重装可以沿用登记或切换 Agent。安装器会保留同名冲突文件和用户修改过的技能。

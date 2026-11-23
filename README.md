@@ -1,12 +1,16 @@
 # Visio 技术方案制图 / visio-diagrams
 
-## Windows x64 一键安装候选版 · trial.10
+## v1.0.0 正式版 · Windows x64
 
-[下载无示例安装包](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.5.0rc6-agent-trial.10/visio-diagrams-v1.5.0rc6-agent-trial.10.zip) · [安装与使用说明](candidates/trial.10/visio-diagrams/README.md)
+[下载无示例安装包](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.0/visio-diagrams-v1.0.0.zip) · [SHA-256 校验文件](https://github.com/Hoshivela/visio-diagrams/releases/download/v1.0.0/visio-diagrams-v1.0.0.zip.sha256) · [安装与使用说明](candidates/trial.10/visio-diagrams/README.md)
 
-适用于 x64 Windows 10/11。完整解压安装包，双击 **Install.cmd**，选择 Codex、Claude Code、Cursor、Gemini CLI、WorkBuddy 或 DeepSeek Harness（DSH）。使用 DSH 时输入 `8` 或 `DSH`。安装完成后，重新打开所选 Agent，在新会话中描述要绘制的图。已克隆仓库的用户可从 `candidates/trial.10/` 运行同一安装入口。
+用自然语言描述业务流程，生成可在 Microsoft Visio 中编辑的单页 VSDX。v1.0.0 正式支持已验收的顺序流程和单判断分流终止流程。架构图、关系图、横向与纵向泳道已有制图入口，正式业务用例覆盖仍待扩充。
 
-本版包含制图内核 1.5.0rc6 和私有 Python 3.14.10。普通图需要可用的字体和基本流程图模具，原生打开、编辑和保存检查还需要桌面 Visio。安装结束时可查看窗口中的自检结果。重新运行 **Install.cmd** 可以切换 Agent，运行 **Uninstall.cmd** 可以卸载。
+完整解压安装包，双击 **Install.cmd**，选择 Codex、Claude Code、Cursor、Gemini CLI、WorkBuddy 或 DeepSeek Harness（DSH）。使用 DSH 时输入 `8` 或 `DSH`。安装完成后重新打开所选 Agent，在新会话中描述要绘制的图。重装可以切换 Agent，卸载可运行 **Uninstall.cmd**。
+
+产品版本 **v1.0.0** 对应已验收的技术构建 `1.5.0rc6-agent-trial.10`，内核为 `1.5.0rc6`。安装包内的版本标识沿用该构建号，已安装 trial.10 的用户可直接继续使用。克隆仓库后也可运行 `candidates/trial.10/Install.cmd`。安装包 SHA-256 为 `15752051d9c7f133ea2189713da3703451515c74f26d0fede5be7f32a2c8b666`。
+
+适用于 Windows 10/11 x64，随包提供私有 Python 3.14.10。普通图需要本机可用的字体与基本流程图模具，原生打开、编辑及保存核验需要桌面 Visio。交付前请核对图上的业务关系与回执。遇到 `DEGRADED` 时，保留首稿与回执，按诊断修改后另存复验。[回执与使用说明](candidates/trial.10/visio-diagrams/README.md)
 
 ## 历史开发预览版
 
